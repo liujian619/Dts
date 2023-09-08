@@ -58,16 +58,27 @@ namespace Dts
 				return string.Empty;
 			}
 
-			StringBuilder sb = new();
-			sb.AppendLine(Format(Comment, Level, true));
+			string trimmedDeclare = Declare.Trim();
+			string trimmedComment = Comment.Trim();	
 
-			string declare = Type == MemberType.Interface ? $"declare interface {Declare} {{"
-				: Type == MemberType.Class ? $"declare class {Declare} {{"
-				: Declare;
+			StringBuilder sb = new();
+			sb.AppendLine(Format(trimmedComment, Level, true));
+
+			string declare = Type == MemberType.Interface ? $"declare interface {trimmedDeclare} {{"
+				: Type == MemberType.Class ? $"declare class {trimmedDeclare} {{"
+				: trimmedDeclare;
 			
-			if ((Type == MemberType.Method || Type == MemberType.Property) && !declare.EndsWith(";"))
+			if (Type == MemberType.Method || Type == MemberType.Property)
 			{
-				declare += ";";
+				if (Level <= 0)
+				{
+					var t = Type == MemberType.Method ? "function" : "let";
+					declare = $"declare {t} {declare}";
+				}
+				if (!declare.EndsWith(";"))
+				{
+					declare += ";";
+				}
 			}
 			
 			sb.AppendLine(Format(declare, Level, false));
