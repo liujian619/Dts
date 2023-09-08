@@ -1,7 +1,7 @@
 ﻿【命令参数说明】
 
 -h, -H			查看帮助
-path[, config]		用于搜索的路径；config 为配置文件路径，默认为 path 目录下 dtsconfig 文件
+path[, config]		用于搜索的路径；config 为配置文件路径，默认为 path 目录下 .dtssetting 文件
 
 
 【配置文件说明】
@@ -59,7 +59,14 @@ path[, config]		用于搜索的路径；config 为配置文件路径，默认为
 由于接口和类包含多个方法和属性，需要在接口或类的结束处加上 /** @dts_end */ 以辅助程序定位。
 
 
+/** @dts_type 声明类型 */
+
+/** @dts_raw 原始内容（直接复制到目标文件中） */
+
+
 以下为完整示例：
+
+/** @dts_type Map = { "a": A, "number": number, "string": string } */
 
 /**
  * A 类。

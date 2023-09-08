@@ -64,7 +64,7 @@ namespace Dts.Properties {
         ///   查找类似 【命令参数说明】
         ///
         ///-h, -H			查看帮助
-        ///path[, config]		用于搜索的路径；config 为配置文件路径，默认为 path 目录下 dtsconfig 文件
+        ///path[, config]		用于搜索的路径；config 为配置文件路径，默认为 path 目录下 .dtssetting 文件
         ///
         ///
         ///【配置文件说明】
@@ -85,7 +85,7 @@ namespace Dts.Properties {
         /// 
         ///7. 以“-wd:”开头：指定用以匹配目录的通配符，通过该通配符匹配到的目录集合会从解析结果中移除；
         /// 
-        ///8. 以“+rd:”开头：指定用以匹配目录的正则表达式， [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        ///8. 以“+rd:”开头：指定用以匹配目录的正则表达 [字符串的其余部分被截断]&quot;; 的本地化字符串。
         /// </summary>
         internal static string help {
             get {

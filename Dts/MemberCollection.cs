@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Text;
 
 namespace Dts
@@ -32,12 +33,24 @@ namespace Dts
 		private void Init(IEnumerable<Member> members)
 		{
 			Stack<MemberCollection> stack = new();
+			List<Member> typeList = new();
 			
 			foreach (var item in members)
 			{
-				MemberCollection top = stack.TryPeek(out MemberCollection? r) && r is not null ? r : this; 
+				MemberCollection top = stack.TryPeek(out MemberCollection? r) && r is not null ? r : this;
 
-				if (item.Type == MemberType.Interface || item.Type == MemberType.Class)
+				if (item.Type == MemberType.Type)
+				{
+					// type 类型定义只能加到最顶层
+					item.Level = 0;
+					typeList.Add(item);
+				}
+				else if (item.Type == MemberType.Raw)
+				{
+					item.Level = stack.Count;
+					top.Add(item);
+				}
+				else if (item.Type == MemberType.Interface || item.Type == MemberType.Class)
 				{
 					item.Level = stack.Count;
 					top.Add(item);
@@ -52,6 +65,11 @@ namespace Dts
 				{
 					stack.TryPop(out _);
 				}
+			}
+
+			foreach (var t in typeList)
+			{
+				Insert(0, t);
 			}
 		}
 	}

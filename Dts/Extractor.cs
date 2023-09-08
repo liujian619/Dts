@@ -18,21 +18,27 @@ namespace Dts
 
 		// \n 表示成员必须在新的一行； .* 由于不是单行模式，.*会匹配到本行结束
 		private const string TypeMember = $@"\n[\s\*]*@dts_{{0}}{Space}(?<{DECLARE}>.*){SpacesOrEmpty}"; // 成员
+		private const string Other = $@"/\*\*{SpacesOrEmpty}@dts_{{0}}{Space}(?<{DECLARE}>.*){SpacesOrEmpty}\*/";
 		private const string End = $@"/\*\*{SpacesOrEmpty}@dts_end{SpacesOrEmpty}\*/";
 
-		// 需要优先匹配 /** @dts_end */
 		private static readonly Regex CommentRegex = new($@"/\*\*{Any}\*/", RegexOptions.Compiled);
 
 		private static readonly Regex InterfaceRegex = new(string.Format(TypeMember, "i"), RegexOptions.Compiled);
 		private static readonly Regex ClassRegex = new(string.Format(TypeMember, "c"), RegexOptions.Compiled);
 		private static readonly Regex MethodRegex = new(string.Format(TypeMember, "m"), RegexOptions.Compiled);
 		private static readonly Regex PropertyRegex = new(string.Format(TypeMember, "p"), RegexOptions.Compiled);
+
+		private static readonly Regex TypeRegex = new(string.Format(Other, "type"), RegexOptions.Compiled);
+		private static readonly Regex RawRegex = new(string.Format(Other, "raw"), RegexOptions.Compiled);
 		private static readonly Regex EndRegex = new(End, RegexOptions.Compiled);
 
 		#endregion
 
 
-		public static void Run(string path, string config = "dtsconfig")
+		private static readonly string NL = Environment.NewLine;
+
+
+		public static void Run(string path, string config = ".dtssetting")
 		{
 			string[]? rules = ReadRules(path, config);
 
@@ -63,7 +69,8 @@ namespace Dts
 
 				string output = parser.Merge ? mergedFile : fp;
 
-				FileUtil.WriteAllText(output, content, parser.Merge);
+				string allText = $"/*! {Path.GetRelativePath(path, file)} */{NL}{NL}{content}";
+				FileUtil.WriteAllText(output, allText, parser.Merge);
 			}
 		}
 
@@ -126,12 +133,20 @@ namespace Dts
 		private static Member? Match(string comment)
 		{
 			// 将行反转，为了匹配出重复设置的最后一项
-			string commentReversed = string.Join(Environment.NewLine, Regex.Split(comment, "\r?\n").Reverse());	
+			string commentReversed = string.Join(NL, Regex.Split(comment, "\r?\n").Reverse());	
 
 			Match match;
 			if (EndRegex.Match(comment).Success)
 			{
 				return Member.Unset;
+			}
+			else if ((match = TypeRegex.Match(commentReversed)).Success)
+			{
+				return new Member(match.Groups[DECLARE].Value.Trim(), "", MemberType.Type); // 类型定义
+			}
+			else if ((match = RawRegex.Match(commentReversed)).Success)
+			{
+				return new Member(match.Groups[DECLARE].Value.Trim(), "", MemberType.Raw); // 原始内容
 			}
 			else if ((match = InterfaceRegex.Match(commentReversed)).Success)
 			{

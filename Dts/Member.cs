@@ -14,6 +14,8 @@ namespace Dts
 			Type = type;
 		}
 
+		private static readonly string NL = Environment.NewLine;
+
 		// 匹配每一行的开头的空白符
 		private static readonly Regex _regex = new(@"^\s*", RegexOptions.Multiline | RegexOptions.Compiled);
 
@@ -59,33 +61,60 @@ namespace Dts
 			}
 
 			string trimmedDeclare = Declare.Trim();
-			string trimmedComment = Comment.Trim();	
+			string trimmedComment = Comment.Trim();
 
 			StringBuilder sb = new();
 			sb.AppendLine(Format(trimmedComment, Level, true));
 
-			string declare = Type == MemberType.Interface ? $"declare interface {trimmedDeclare} {{"
-				: Type == MemberType.Class ? $"declare class {trimmedDeclare} {{"
-				: trimmedDeclare;
-			
-			if (Type == MemberType.Method || Type == MemberType.Property)
+			string declare;
+			if (Type == MemberType.Raw)
 			{
-				if (Level <= 0)
+				declare = trimmedDeclare;
+			}
+			else if (Type == MemberType.Type)
+			{
+				declare = trimmedDeclare;
+				if (!declare.StartsWith("type"))
 				{
-					var t = Type == MemberType.Method ? "function" : "let";
-					declare = $"declare {t} {declare}";
+					declare = $"type {declare}";
 				}
+			}
+			else if (Type == MemberType.Interface)
+			{
+				declare = $"declare interface {trimmedDeclare} {{";
+			}
+			else if (Type == MemberType.Class)
+			{
+				declare = $"declare class {trimmedDeclare} {{";
+			}
+			else if (Type == MemberType.Method)
+			{
+				declare = $"{(Level <= 0 ? "declare function " : "")}{trimmedDeclare}";
+			}
+			else if (Type == MemberType.Property)
+			{
+				declare = $"{(Level <= 0 ? "declare let " : "")}{trimmedDeclare}";
+			}
+			else
+			{
+				return string.Empty;
+			}
+
+			// 自动加分号
+			if (Type == MemberType.Method || Type == MemberType.Property || Type == MemberType.Raw || Type == MemberType.Type)
+			{
 				if (!declare.EndsWith(";"))
 				{
 					declare += ";";
 				}
 			}
-			
+
 			sb.AppendLine(Format(declare, Level, false));
 
+			// 循环子项集合
 			for (int i = 0; i < Children.Count; i++)
 			{
-				sb.Append(Children[i].Render() + (i < Children.Count - 1 ? Environment.NewLine : ""));
+				sb.Append(Children[i].Render() + (i < Children.Count - 1 ? NL : ""));
 			}
 
 			if (Type == MemberType.Interface || Type == MemberType.Class)
@@ -102,7 +131,7 @@ namespace Dts
 			string result = content;
 			if (isComment)
 			{
-				result = string.Join(Environment.NewLine, Regex.Split(result, @"\r?\n").Where(s => !MemberRegex.IsMatch(s)));
+				result = string.Join(NL, Regex.Split(result, @"\r?\n").Where(s => !MemberRegex.IsMatch(s))); // 去掉 @dts 所在行
 			}
 
 			int delta = isComment ? 1 : 0;
@@ -114,5 +143,5 @@ namespace Dts
 	}
 
 
-	internal enum MemberType { Interface, Class, Method, Property }
+	internal enum MemberType { Interface, Class, Method, Property, Raw, Type }
 }
