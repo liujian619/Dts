@@ -50,27 +50,40 @@ namespace Dts
 				return;
 			}
 
-			string mergedFile = Path.GetFullPath(parser.Output, path);
-			if (File.Exists(mergedFile))
+			string mergedInputFile = Path.GetFullPath(parser.InputFile, path);
+			if (File.Exists(mergedInputFile))
 			{
-				File.Delete(mergedFile);
+				File.Delete(mergedInputFile);
+			}
+
+			string mergedOutputFile = Path.GetFullPath(parser.OutputFile, path);
+			if (File.Exists(mergedOutputFile))
+			{
+				File.Delete(mergedOutputFile);
 			}
 
 			foreach (var file in parser.Files)
 			{
-				List<Member> members = Parse(FileUtil.ReadAllText(file));
-				string content = new MemberCollection(members).Render();
+				string fileContent = FileUtil.ReadAllText(file).Trim();
+				string fileRelativePath = Path.GetRelativePath(path, file);
 
-				string fp = Path.ChangeExtension(file, OptionParser.EXT);
-				if (File.Exists(fp))
+				if (parser.MergeInput)
 				{
-					File.Delete(fp);
+					string input = $"/*! {fileRelativePath} */{NL}{fileContent}{NL}{NL}{NL}";
+					FileUtil.WriteAllText(mergedInputFile, input, true);
 				}
 
-				string output = parser.Merge ? mergedFile : fp;
 
-				string allText = $"/*! {Path.GetRelativePath(path, file)} */{NL}{NL}{content}";
-				FileUtil.WriteAllText(output, allText, parser.Merge);
+				string outputFile = Path.ChangeExtension(file, ".d.ts");
+				if (File.Exists(outputFile))
+				{
+					File.Delete(outputFile);
+				}
+
+				List<Member> members = Parse(fileContent);
+				string content = new MemberCollection(members).Render().Trim();
+				string output = $"/*! {fileRelativePath} */{NL}{content}{NL}{NL}{NL}";
+				FileUtil.WriteAllText(parser.MergeOutput ? mergedOutputFile : outputFile, output, parser.MergeOutput);
 			}
 		}
 

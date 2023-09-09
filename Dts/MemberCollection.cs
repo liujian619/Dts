@@ -67,6 +67,7 @@ namespace Dts
 				}
 			}
 
+			// 类型定义放到最前
 			foreach (var t in typeList)
 			{
 				Insert(0, t);

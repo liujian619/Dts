@@ -9,7 +9,7 @@ namespace Dts
 		{
 #if DEBUG
 			// args = new[] { "-h" };
-			args = new[] { @"C:\Users\Moty\Desktop\test" };
+			args = new[] { @"D:\code\Moty.Dev\Dao\wwwroot" };
 #endif
 
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
