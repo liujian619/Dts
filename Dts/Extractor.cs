@@ -36,28 +36,20 @@ namespace Dts
 
 
 		private static readonly string NL = Environment.NewLine;
+		private static readonly Regex SepRegex = new(@"\\+", RegexOptions.Compiled);
 
 
-		public static void Run(string path, string config = ".dtssetting")
+		public static void Extract(string[] files, string? outputFileForMerging = null)
 		{
-			string[]? rules = ReadRules(path, config);
-
-			OptionParser parser = new();
-			parser.ParseRules(path, rules!);
+			OptionParser parser = OptionParser.Create(files, outputFileForMerging);
 
 			if (parser.Disable)
 			{
 				return;
 			}
 
-			string mergedInputFile = Path.GetFullPath(parser.InputFile, path);
-			if (File.Exists(mergedInputFile))
-			{
-				File.Delete(mergedInputFile);
-			}
-
-			string mergedOutputFile = Path.GetFullPath(parser.OutputFile, path);
-			if (File.Exists(mergedOutputFile))
+			string mergedOutputFile = Path.GetFullPath(parser.OutputFile);
+			if (parser.MergeOutput && File.Exists(mergedOutputFile))
 			{
 				File.Delete(mergedOutputFile);
 			}
@@ -65,52 +57,86 @@ namespace Dts
 			foreach (var file in parser.Files)
 			{
 				string fileContent = FileUtil.ReadAllText(file).Trim();
-				string fileRelativePath = Path.GetRelativePath(path, file);
 
+				string outputFile = Path.ChangeExtension(file, ".d.ts");
+				if (!parser.MergeOutput && File.Exists(outputFile))
+				{
+					File.Delete(outputFile);
+				}
+
+				string finalOutputFile = parser.MergeOutput ? mergedOutputFile : outputFile;
+				string fileRelativePath = Path.GetRelativePath(Path.GetDirectoryName(finalOutputFile) ?? finalOutputFile, file);
+				fileRelativePath = SepRegex.Replace(fileRelativePath, "/");
+
+				List<Member> members = Parse(fileContent);
+				string content = new MemberCollection(members).Render().Trim();
+				string output = (parser.MergeOutput ? $"/*! {fileRelativePath} */{NL}" : "") + $"{content}{NL}{NL}{NL}";
+				FileUtil.WriteAllText(finalOutputFile, output, parser.MergeOutput);
+			}
+		}
+
+		public static void Extract(string path, string?config = null)
+		{
+			config ??= ".dtssetting";
+
+			string[]? rules = ReadRules(path, config);
+			if (rules is null) { Environment.Exit(0); }
+
+			OptionParser parser = new();
+			parser.ParseRules(path, rules);
+
+			if (parser.Disable)
+			{
+				return;
+			}
+
+			string mergedInputFile = Path.GetFullPath(parser.InputFile, path);
+			if (parser.MergeInput && File.Exists(mergedInputFile))
+			{
+				File.Delete(mergedInputFile);
+			}
+
+			string mergedOutputFile = Path.GetFullPath(parser.OutputFile, path);
+			if (parser.MergeOutput && File.Exists(mergedOutputFile))
+			{
+				File.Delete(mergedOutputFile);
+			}
+
+			foreach (var file in parser.Files)
+			{
+				string fileContent = FileUtil.ReadAllText(file).Trim();
+
+				string outputFile = Path.ChangeExtension(file, ".d.ts");
+				if (!parser.MergeOutput && File.Exists(outputFile))
+				{
+					File.Delete(outputFile);
+				}
+
+				string finalOutputFile = parser.MergeOutput ? mergedOutputFile : outputFile;
+				string fileRelativePath = Path.GetRelativePath(Path.GetDirectoryName(finalOutputFile) ?? finalOutputFile, file);
+				fileRelativePath = SepRegex.Replace(fileRelativePath, "/");
+				
 				if (parser.MergeInput)
 				{
 					string input = $"/*! {fileRelativePath} */{NL}{fileContent}{NL}{NL}{NL}";
 					FileUtil.WriteAllText(mergedInputFile, input, true);
 				}
 
-
-				string outputFile = Path.ChangeExtension(file, ".d.ts");
-				if (File.Exists(outputFile))
-				{
-					File.Delete(outputFile);
-				}
-
 				List<Member> members = Parse(fileContent);
 				string content = new MemberCollection(members).Render().Trim();
-				string output = $"/*! {fileRelativePath} */{NL}{content}{NL}{NL}{NL}";
-				FileUtil.WriteAllText(parser.MergeOutput ? mergedOutputFile : outputFile, output, parser.MergeOutput);
+				string output = (parser.MergeOutput ? $"/*! {fileRelativePath} */{NL}" : "") + $"{content}{NL}{NL}{NL}";
+				FileUtil.WriteAllText(finalOutputFile, output, parser.MergeOutput);
 			}
 		}
 
 
 		private static string[]? ReadRules(string path, string config)
 		{
-			if (!Directory.Exists(path))
-			{
-				Program.Error($"目录“{path}”不存在或已被删除。");
-				return null;
-			}
+			FileUtil.ExistsDir(path);
 
-			try
-			{
-				string configFile = Path.GetFullPath(config, path);
-				if (!File.Exists(configFile))
-				{
-					throw new FileNotFoundException();
-				}
-
-				return FileUtil.ReadLines(configFile);
-			}
-			catch
-			{
-				Program.Error("配置文件不存在或已被删除。");
-				return null;
-			}
+			string configFile = Path.GetFullPath(config, path);
+			FileUtil.ExistsFile(configFile);
+			return FileUtil.ReadLines(configFile);
 		}
 
 		private static List<Member> Parse(string content)

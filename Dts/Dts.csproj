@@ -8,8 +8,8 @@
 		<PublishSingleFile>true</PublishSingleFile>
 		<Product>TypeScript 声明文件提取程序</Product>
 		<Copyright>© Liu Jian. All rights reserved.</Copyright>
-		<FileVersion>0.0.9.1</FileVersion>
-		<InformationalVersion>0.0.9-beta.1</InformationalVersion>
+		<FileVersion>0.0.9.2</FileVersion>
+		<InformationalVersion>0.0.9-beta.2</InformationalVersion>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>sign.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>

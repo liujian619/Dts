@@ -8,7 +8,7 @@ namespace Dts
 	{
 		public static string[] ReadLines(string file)
 		{
-			Check(file);
+			ExistsFile(file);
 
 			List<string> lines = new();
 			using var sr = new StreamReader(File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read), Encoding.UTF8, true);
@@ -22,7 +22,7 @@ namespace Dts
 
 		public static string ReadAllText(string file)
 		{
-			Check(file);
+			ExistsFile(file);
 
 			using var sr = new StreamReader(File.OpenRead(file), Encoding.UTF8, true);
 			return sr.ReadToEnd();
@@ -37,11 +37,19 @@ namespace Dts
 			sw.Flush();
 		}
 
-		private static void Check(string file)
+		internal static void ExistsFile(string file)
 		{
 			if (!File.Exists(file))
 			{
-				Program.Error($"文件“{file}”不存在或已被删除。");
+				Program.WriteErrorMessage($"文件“{file}”不存在或已被删除。");
+			}
+		}
+
+		internal static void ExistsDir(string dir)
+		{
+			if (!Directory.Exists(dir))
+			{
+				Program.WriteErrorMessage($"目录“{dir}”不存在或已被删除。");
 			}
 		}
 	}

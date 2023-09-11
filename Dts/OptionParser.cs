@@ -1,11 +1,24 @@
 ﻿using System;
-using System.IO;
 using FileSystemSearcher;
 
 namespace Dts
 {
 	internal sealed class OptionParser : RuleParser
 	{
+		internal static OptionParser Create(string[] files, string? outputFile = null)
+		{
+			var parser = new OptionParser();
+
+			parser.AddFiles(files);
+			if (outputFile is not null)
+			{
+				parser.MergeOutput = true;
+				parser.OutputFile = outputFile;
+			}
+
+			return parser;
+		}
+
 		/// <summary>
 		/// 是否禁用。
 		/// </summary>
