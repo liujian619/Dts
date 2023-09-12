@@ -26,7 +26,7 @@ namespace Dts
 
 		public static bool IsFile(string[] args) 
 		{
-			return args.Length >= 2 && args[0] == "-f" && args.Contains("-m");
+			return args.Length >= 2 && args[0] == "-f";
 		}
 
 		public static bool IsDir(string[] args)
@@ -60,6 +60,10 @@ namespace Dts
 
 				files = arr[..i];
 				outputFile = arr[^1];
+			}
+			else
+			{
+				files = arr;
 			}
 
 			foreach (var f in files!)
