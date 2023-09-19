@@ -20,6 +20,8 @@ namespace Dts
 		private static readonly Regex _regex = new(@"^\s*", RegexOptions.Multiline | RegexOptions.Compiled);
 
 		private static readonly Regex MemberRegex = new(@"^[\s\*]*@dts_[icmp][ \t]", RegexOptions.Compiled);
+		
+		private static readonly Regex ReturnsRegex = new(@"^[\s\*]*@returns(?:[ \t]|$)", RegexOptions.Compiled);
 
 		internal static readonly Member Unset = new("", "", null);
 
@@ -131,7 +133,10 @@ namespace Dts
 			string result = content;
 			if (isComment)
 			{
-				result = string.Join(NL, Regex.Split(result, @"\r?\n").Where(s => !MemberRegex.IsMatch(s))); // 去掉 @dts 所在行
+				result = string.Join(NL, Regex.Split(result, @"\r?\n").Where(s =>
+					!MemberRegex.IsMatch(s) // 去掉 @dts 所在行
+					&& !ReturnsRegex.IsMatch(s) // 去掉 @returns 所在行
+				)); 
 			}
 
 			int delta = isComment ? 1 : 0;
