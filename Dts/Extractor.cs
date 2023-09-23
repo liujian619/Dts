@@ -75,7 +75,7 @@ namespace Dts
 			}
 		}
 
-		public static void Extract(string path, string?config = null)
+		public static void Extract(string path, string? config = null)
 		{
 			config ??= ".dtssetting";
 

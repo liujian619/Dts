@@ -20,6 +20,14 @@ namespace Dts
 			return lines.ToArray();
 		}
 
+		public static void AppendLines(string file, string[] lines, bool overwrite = false)
+		{
+			if (overwrite)
+				File.WriteAllLines(file, lines);
+			else
+				File.AppendAllLines(file, lines);
+		}
+
 		public static string ReadAllText(string file)
 		{
 			ExistsFile(file);

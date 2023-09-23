@@ -32,3 +32,9 @@
     -H, --extended-help     查看更详细的帮助
 
     -v                      查看版本
+
+附加命令：
+
+    dts join -h | -H                查看 join 命令更详细的帮助
+
+    dts join <dtssetting file>      该命令用于合并多个 js 文件

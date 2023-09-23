@@ -34,6 +34,16 @@ namespace Dts
 			return (args.Length == 2 || args.Length == 3) && args[0] == "-d";
 		}
 
+		public static bool IsJoinHelp(string[] args)
+		{
+			return args.Length == 2 && args[0] == "join" && (args[1] == "-h"|| args[1] == "-H");
+		}
+
+		public static bool IsJoin(string[] args)
+		{
+			return args.Length == 2 && args[0] == "join";
+		}
+
 
 		public static (string[], string?) ParseForIsFile(string[] args)
 		{

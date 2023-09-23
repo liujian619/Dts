@@ -28,18 +28,32 @@ namespace Dts
 			{
 				var (files, outputFile) = ArgsParser.ParseForIsFile(args);
 				Extractor.Extract(files, outputFile);
-				Console.WriteLine("执行成功。");
+				Done();
 			}
 			else if (ArgsParser.IsDir(args))
 			{
 				var (dir, settingFile) = ArgsParser.ParseForIsDir(args);
 				Extractor.Extract(dir, settingFile);
-				Console.WriteLine("执行成功。");
+				Done();
+			}
+			else if (ArgsParser.IsJoinHelp(args))
+			{
+				Console.WriteLine(Resources.join);
+			}
+			else if (ArgsParser.IsJoin(args))
+			{
+				string settingFile = args[1];
+				Joiner.Join(settingFile);
 			}
 			else
 			{
 				WriteErrorMessage("未知的命令，请使用“-h”参数查看帮助。");
 			}
+		}
+
+		private static void Done() 
+		{
+			Console.WriteLine("Dts 成功执行命令。");
 		}
 		
 		private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)

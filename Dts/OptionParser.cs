@@ -40,7 +40,7 @@ namespace Dts
 		public bool MergeInput { get; private set; } = false;
 
 		/// <summary>
-		/// 一个文件名，合并所以输入到该文件。
+		/// 一个文件名，合并所有输入到该文件。
 		/// </summary>
 		public string InputFile { get; private set; } = "lib.js";
 
